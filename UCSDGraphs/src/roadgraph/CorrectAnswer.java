@@ -3,6 +3,7 @@ package roadgraph;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Scanner;
 import geography.*;
 
@@ -13,6 +14,7 @@ public class CorrectAnswer {
     public CorrectAnswer(String file, boolean hasEdges) {
         try {
             Scanner s = new Scanner(new File(file));
+            s.useLocale(Locale.ENGLISH);
             if (hasEdges) {
                 vertices = s.nextInt();
                 edges = s.nextInt();

@@ -1,16 +1,24 @@
 /**
  * @author UCSD MOOC development team and YOU
  * 
- * A class which reprsents a graph of geographic locations
+ * A class which represents a graph of geographic locations
  * Nodes in the graph are intersections between 
  *
  */
 package roadgraph;
 
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
+import java.util.Queue;
 import java.util.Set;
 import java.util.function.Consumer;
+
+import javax.management.Query;
 
 import geography.GeographicPoint;
 import util.GraphLoader;
@@ -24,7 +32,8 @@ import util.GraphLoader;
  */
 public class MapGraph {
 	//TODO: Add your member variables here in WEEK 2
-	
+	private HashMap<GeographicPoint, MapNode> vertices;
+	private List<MapEdge> edges;
 	
 	/** 
 	 * Create a new empty MapGraph 
@@ -32,6 +41,8 @@ public class MapGraph {
 	public MapGraph()
 	{
 		// TODO: Implement in this constructor in WEEK 2
+		this.vertices = new HashMap<>();
+		this.edges = new ArrayList<>();
 	}
 	
 	/**
@@ -41,7 +52,7 @@ public class MapGraph {
 	public int getNumVertices()
 	{
 		//TODO: Implement this method in WEEK 2
-		return 0;
+		return vertices.size();
 	}
 	
 	/**
@@ -51,7 +62,7 @@ public class MapGraph {
 	public Set<GeographicPoint> getVertices()
 	{
 		//TODO: Implement this method in WEEK 2
-		return null;
+		return vertices.keySet();
 	}
 	
 	/**
@@ -61,7 +72,7 @@ public class MapGraph {
 	public int getNumEdges()
 	{
 		//TODO: Implement this method in WEEK 2
-		return 0;
+		return edges.size();
 	}
 
 	
@@ -76,6 +87,11 @@ public class MapGraph {
 	public boolean addVertex(GeographicPoint location)
 	{
 		// TODO: Implement this method in WEEK 2
+		if(vertices.get(location) == null){
+			MapNode node = new MapNode(location);
+			vertices.put(location, node);
+			return true;
+		}
 		return false;
 	}
 	
@@ -95,7 +111,15 @@ public class MapGraph {
 			String roadType, double length) throws IllegalArgumentException {
 
 		//TODO: Implement this method in WEEK 2
-		
+		if(from == null || to == null || roadName == null 
+				|| roadType == null || length == 0.0 
+				|| vertices.get(from) == null || vertices.get(to)==null){
+			throw new IllegalArgumentException();
+		}
+		MapNode startNode = vertices.get(from);
+		MapEdge mapEdge = new MapEdge(from, to, roadName, length, roadType);
+		edges.add(mapEdge);
+		startNode.addOutEdge(mapEdge);
 	}
 	
 
@@ -124,11 +148,77 @@ public class MapGraph {
 			 					     GeographicPoint goal, Consumer<GeographicPoint> nodeSearched)
 	{
 		// TODO: Implement this method in WEEK 2
+		if(start == null || goal == null){
+			System.out.println("Start or goal is null!!");
+			return new ArrayList<>();
+		}
+		
+		MapNode nodeStart = vertices.get(start);
+		MapNode nodeGoal = vertices.get(goal);
+		
+		HashMap<MapNode, MapNode> parentMap = new HashMap<>();
+		boolean found = bfsSearch(nodeStart, nodeGoal, parentMap);
+		
+		if(!found){
+			System.out.println("No paths exists");
+			//return new LinkedList<>();
+			return null;
+		}
 		
 		// Hook for visualization.  See writeup.
 		//nodeSearched.accept(next.getLocation());
 
-		return null;
+		return constructPath(nodeStart, nodeGoal, parentMap);
+	}
+	
+	private List<GeographicPoint> constructPath(MapNode nodeStart, MapNode nodeGoal,
+			HashMap<MapNode, MapNode> parentMap){
+		LinkedList<GeographicPoint> path = new LinkedList<>();
+		MapNode curr = nodeGoal;
+		while(curr != nodeStart){
+			path.addFirst(curr.getLocation());
+			curr = parentMap.get(curr);
+		}
+		path.addFirst(nodeStart.getLocation());
+		
+		return path;
+	}
+	
+	private boolean bfsSearch(MapNode nodeStart, MapNode nodeGoal, 
+			HashMap<MapNode, MapNode> parentMap){
+		
+		HashSet<MapNode> visited = new HashSet<>();
+		Queue<MapNode> toExplore = new LinkedList<MapNode>();
+		
+		toExplore.add(nodeStart);
+		boolean found = false;
+		
+		//Do the search
+		while(!toExplore.isEmpty()){
+			MapNode curr = toExplore.remove();
+			if(curr == nodeGoal){
+				found = true;
+				break;
+			}
+			
+			List<MapNode> neighbors = new ArrayList<>();
+			for(GeographicPoint gp : curr.getNeighbors()){
+				neighbors.add(vertices.get(gp));
+			}
+			
+			ListIterator<MapNode> it = neighbors.listIterator(neighbors.size());
+			while(it.hasPrevious()){
+				MapNode next = it.previous();
+				if(!visited.contains(next)){
+					visited.add(next);
+					parentMap.put(next, curr);
+					toExplore.add(next);
+				}
+			}
+			
+		}
+		
+		return found;
 	}
 	
 
