@@ -18,7 +18,6 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import javax.management.Query;
 
 import geography.GeographicPoint;
 import util.GraphLoader;
@@ -32,8 +31,10 @@ import util.GraphLoader;
  */
 public class MapGraph {
 	//TODO: Add your member variables here in WEEK 2
+	//Connects geographic points with nodes in the map
 	private HashMap<GeographicPoint, MapNode> vertices;
-	private List<MapEdge> edges;
+	//Stores the edges in the map
+	private HashSet<MapEdge> edges;
 	
 	/** 
 	 * Create a new empty MapGraph 
@@ -42,7 +43,7 @@ public class MapGraph {
 	{
 		// TODO: Implement in this constructor in WEEK 2
 		this.vertices = new HashMap<>();
-		this.edges = new ArrayList<>();
+		this.edges = new HashSet<>();
 	}
 	
 	/**
@@ -62,7 +63,12 @@ public class MapGraph {
 	public Set<GeographicPoint> getVertices()
 	{
 		//TODO: Implement this method in WEEK 2
-		return vertices.keySet();
+		//new Set for storing intersections
+		Set<GeographicPoint> setVertices = new HashSet<>(); 
+		for (GeographicPoint gp : vertices.keySet()) {
+			setVertices.add(new GeographicPoint(gp.getX(), gp.getY()));
+		}
+		return setVertices;
 	}
 	
 	/**
@@ -117,9 +123,13 @@ public class MapGraph {
 			throw new IllegalArgumentException();
 		}
 		MapNode startNode = vertices.get(from);
-		MapEdge mapEdge = new MapEdge(from, to, roadName, length, roadType);
-		edges.add(mapEdge);
-		startNode.addOutEdge(mapEdge);
+		MapNode stopNode = vertices.get(to);
+		MapEdge mapEdge = new MapEdge(startNode, stopNode, roadName, length, roadType);
+		
+		//If edge doesn't exist: to add
+		if(startNode.addOutEdge(mapEdge)){
+			edges.add(mapEdge);
+		}
 	}
 	
 
@@ -153,6 +163,7 @@ public class MapGraph {
 			return new ArrayList<>();
 		}
 		
+		//Initialization of variables
 		MapNode nodeStart = vertices.get(start);
 		MapNode nodeGoal = vertices.get(goal);
 		
@@ -161,7 +172,6 @@ public class MapGraph {
 		
 		if(!found){
 			System.out.println("No paths exists");
-			//return new LinkedList<>();
 			return null;
 		}
 		
@@ -171,19 +181,35 @@ public class MapGraph {
 		return constructPath(nodeStart, nodeGoal, parentMap);
 	}
 	
+	/**
+	 * Build the path
+	 * 
+	 * @param nodeStart The start node
+	 * @param nodeGoal The goal node
+	 * @param parentMap The map with the parents
+	 * @return A new List with copies of the nodes' locations that build the path.
+	 */
 	private List<GeographicPoint> constructPath(MapNode nodeStart, MapNode nodeGoal,
 			HashMap<MapNode, MapNode> parentMap){
 		LinkedList<GeographicPoint> path = new LinkedList<>();
 		MapNode curr = nodeGoal;
 		while(curr != nodeStart){
-			path.addFirst(curr.getLocation());
+			path.addFirst(new GeographicPoint(curr.getLocation().getX(), curr.getLocation().getY()));
 			curr = parentMap.get(curr);
 		}
-		path.addFirst(nodeStart.getLocation());
+		path.addFirst(new GeographicPoint(nodeStart.getLocation().getX(), nodeStart.getLocation().getY()));
 		
 		return path;
 	}
 	
+	/**
+	 * Find the path from start to goal using breadth first search
+	 * 
+	 * @param start The starting location
+	 * @param goal The goal location
+	 * @param parentMap The map with the parents
+	 * @return True if it find the path
+	 */
 	private boolean bfsSearch(MapNode nodeStart, MapNode nodeGoal, 
 			HashMap<MapNode, MapNode> parentMap){
 		
@@ -196,23 +222,19 @@ public class MapGraph {
 		//Do the search
 		while(!toExplore.isEmpty()){
 			MapNode curr = toExplore.remove();
-			if(curr == nodeGoal){
+			if(curr.equals(nodeGoal)){
 				found = true;
 				break;
 			}
 			
-			List<MapNode> neighbors = new ArrayList<>();
-			for(GeographicPoint gp : curr.getNeighbors()){
-				neighbors.add(vertices.get(gp));
-			}
+			//It translates locations to nodes in the map
+			Set<MapNode> neighbors = curr.getNeighbors();
 			
-			ListIterator<MapNode> it = neighbors.listIterator(neighbors.size());
-			while(it.hasPrevious()){
-				MapNode next = it.previous();
-				if(!visited.contains(next)){
-					visited.add(next);
-					parentMap.put(next, curr);
-					toExplore.add(next);
+			for(MapNode neighbor : neighbors){
+				if(!visited.contains(neighbor)){
+					visited.add(neighbor);
+					parentMap.put(neighbor, curr);
+					toExplore.add(neighbor);
 				}
 			}
 			

@@ -2,12 +2,27 @@ package roadgraph;
 
 import geography.GeographicPoint;
 
+/**
+ * 
+ * 
+ * A class which represents a directed edge in the map.
+ * Edges have geographic start location and
+ *  geographic stop location. Also,
+ *  some properties like name, length, type
+ *  
+ *
+ */
 public class MapEdge {
-	GeographicPoint start;
-	GeographicPoint stop;
-	String streetName;
-	double streetLength;
-	String streetType;
+	//MapNode start point
+	private MapNode start;
+	//MapNode stop point
+	private MapNode stop;
+	//Name of the edge
+	private String streetName;
+	//Length of the edge
+	private double streetLength;
+	//Type of the edge
+	private String streetType;
 	
 	/**
 	 * Constructor's MapEdge
@@ -18,25 +33,28 @@ public class MapEdge {
 	 * @param streetLength Length of the edge
 	 * @param streetType Type of the edge
 	 */
-	public MapEdge(GeographicPoint start, GeographicPoint stop,
+	public MapEdge(MapNode start, MapNode stop,
 			String streetName, double streetLength, String streetType) {
 		this.start = start;
 		this.stop = stop;
+		this.streetName = streetName;
+		this.streetLength = streetLength;
+		this.streetType = streetType;
 	}
 	
 	/**
 	 * 
-	 * @return the start location
+	 * @return the MapNode start location
 	 */
-	public GeographicPoint getStart() {
+	public MapNode getStart() {
 		return start;
 	}
 	
 	/**
 	 * 
-	 * @return the stop location
+	 * @return the MapNode stop location
 	 */
-	public GeographicPoint getStop() {
+	public MapNode getStop() {
 		return stop;
 	}
 	
@@ -63,4 +81,5 @@ public class MapEdge {
 	public String getStreetType() {
 		return streetType;
 	}
+	
 }
