@@ -1,99 +1,149 @@
+/**
+ * A class to represent a node in the map
+ */
 package roadgraph;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-
-import com.sun.javafx.geom.Edge;
 
 import geography.GeographicPoint;
 
 /**
+ * @author UCSD MOOC development team
  * 
- * 
- * A class which represents a node in the map.
- * Nodes have geographic locations and 
- * connections with others nodes through
- * the edges 
- *
+ * Class representing a vertex (or node) in our MapGraph
  *
  */
-public class MapNode {
-	//Geographic location of the node
+// WEEK 3 SOLUTIONS implements Comparable
+class MapNode implements Comparable
+{
+	/** The list of edges out of this node */
+	private HashSet<MapEdge> edges;
+		
+	/** the latitude and longitude of this node */
 	private GeographicPoint location;
-	//List of the out edges, the adjacency list
-	private HashSet<MapEdge> outEdges;
 	
-	/**
-	 * MapNode's constructor
-	 * @param location GeographicPoint indicating geographic location
-	 */
-	public MapNode(GeographicPoint location) {
-		this.location = location;
-		this.outEdges = new HashSet<>();
+	// WEEK 3 SOLUTIONS
+	
+	/** the predicted distance of this node (used in Week 3 algorithms) */
+	private double distance;
+	
+	/** the actual distance of this node from start (used in Week 3 algorithms) */
+	private double actualDistance;
+	
+	// END WEEK 3 SOLUTIONS
+	
+	MapNode(GeographicPoint loc)
+	{
+		location = loc;
+		edges = new HashSet<MapEdge>();
+		distance = 0.0;
+		actualDistance = 0.0;
+	}
+		
+	void addEdge(MapEdge edge)
+	{
+		edges.add(edge);
 	}
 	
-	/**
-	 * 
-	 * @return MapNode's geographic location
-	 */
-	public GeographicPoint getLocation() {
-		return location;
-	}
-	
-	/**
-	 * Look up in the adjacency list for the neighbor nodes
-	 *  and get your geographic location
-	 * 
-	 * @return List with the geographic locations of the neighbors nodes
-	 */
-	public Set<MapNode> getNeighbors() {
-		Set<MapNode> neighbors = new HashSet<>();
-		for(MapEdge edge : outEdges){
-			neighbors.add(edge.getStop());
+	/** Return the neighbors of this MapNode */
+	Set<MapNode> getNeighbors()
+	{
+		Set<MapNode> neighbors = new HashSet<MapNode>();
+		for (MapEdge edge : edges) {
+			neighbors.add(edge.getOtherNode(this));
 		}
 		return neighbors;
 	}
 	
-	/**
-	 * Add an out edge to the node if this not exist
-	 * in the adjacency list.
-	 * 
-	 * @param mapEdge The out edge to the neighbor
-	 * @return true if the out edge was added.
-	 */
-	public boolean addOutEdge(MapEdge mapEdge){
-		return outEdges.add(mapEdge);
+	/** get the location of a node */
+	GeographicPoint getLocation()
+	{
+		return location;
 	}
 	
-	/**
-	 * Delete a out edge if this exist in 
-	 * the adjacency list.
-	 * 
-	 * @param mapEdge The out edge to the neighbor
-	 * @return true if the out edge was deleted.
-	 */
-	public boolean delOutEdge(MapEdge mapEdge){
-		return outEdges.remove(mapEdge);
+	/** return the edges out of this node */
+	Set<MapEdge> getEdges()
+	{
+		return edges;
 	}
-
-	@Override
-	public int hashCode() {
+	
+	/** Returns whether two nodes are equal.
+	 * Nodes are considered equal if their locations are the same, 
+	 * even if their street list is different.
+	 */
+	public boolean equals(Object o)
+	{
+		if (!(o instanceof MapNode) || (o == null)) {
+			return false;
+		}
+		MapNode node = (MapNode)o;
+		return node.location.equals(this.location);
+	}
+	
+	/** Because we compare nodes using their location, we also 
+	 * may use their location for HashCode.
+	 * @return The HashCode for this node, which is the HashCode for the 
+	 * underlying point
+	 */
+	public int HashCode()
+	{
 		return location.hashCode();
 	}
+	
+	/** ToString to print out a MapNode method
+	 *  @return the string representation of a MapNode
+	 */
+	public String toString()
+	{
+		String toReturn = "[NODE at location (" + location + ")";
+		toReturn += " intersects streets: ";
+		for (MapEdge e: edges) {
+			toReturn += e.getRoadName() + ", ";
+		}
+		toReturn += "]";
+		return toReturn;
+	}
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		MapNode other = (MapNode) obj;
-		return other.location.equals(this.location);
+	// For debugging, output roadNames as a String.
+	public String roadNamesAsString()
+	{
+		String toReturn = "(";
+		for (MapEdge e: edges) {
+			toReturn += e.getRoadName() + ", ";
+		}
+		toReturn += ")";
+		return toReturn;
+	}
+
+	//  WEEK 3 SOLUTIONS 
+	
+	// get node distance (predicted)
+	public double getDistance() {
+		return this.distance;
 	}
 	
+	// set node distance (predicted)
+	public void setDistance(double distance) {
+	    this.distance = distance;
+	}
+
+	// get node distance (actual)
+	public double getActualDistance() {
+		return this.actualDistance;
+	}
 	
+	// set node distance (actual)	
+	public void setActualDistance(double actualDistance) {
+	    this.actualDistance = actualDistance;
+	}
+	
+    // Code to implement Comparable
+	public int compareTo(Object o) {
+		// convert to map node, may throw exception
+		MapNode m = (MapNode)o; 
+		return ((Double)this.getDistance()).compareTo((Double) m.getDistance());
+	}
+
+	// END WEEK 3 SOLUTIONS
 }
